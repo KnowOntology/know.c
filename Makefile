@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -std=c11
+CFLAGS = -std=c11 #-Wall -Wextra
 INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 
