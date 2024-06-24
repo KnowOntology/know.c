@@ -1,0 +1,3 @@
+# CMake artifacts
+build/
+CMakeUserPresets.json
