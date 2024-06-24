@@ -24,7 +24,6 @@ typedef struct know_thing {
   char** names;
   char** notes;
   char** photos;
-  void* size;
 } know_thing_t;
 
 inline know_thing_t* know_thing_alloc() {
@@ -43,7 +42,6 @@ inline know_thing_t* know_thing_clone(const know_thing_t* thing) {
   clone->names = NULL; // TODO
   clone->notes = NULL; // TODO
   clone->photos = NULL; // TODO
-  clone->size = NULL; // TODO
   return clone;
 }
 
@@ -82,10 +80,6 @@ inline void know_thing_free(know_thing_t* thing) {
     free(thing->photos);
     thing->photos = NULL;
   }
-  if (thing->size) {
-    free(thing->size);
-    thing->size = NULL;
-  }
   free(thing);
 }
 
@@ -121,4 +115,3 @@ inline char** know_thing_notes_clone(const know_thing_t* thing) {
 inline char** know_thing_photos_clone(const know_thing_t* thing) {
   return know_strings_clone((const char**)thing->photos);
 }
-

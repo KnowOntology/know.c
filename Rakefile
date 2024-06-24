@@ -3,8 +3,7 @@ require 'know/ontology'
 require 'rdf/turtle'
 require 'stringio'
 
-include ActiveSupport::Inflector
-include RDF
+include ActiveSupport::Inflector, RDF
 
 ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.irregular 'cafe', 'cafes'
@@ -24,7 +23,7 @@ file 'src/know/classes.h' => %w(../know.ttl) do |t|
     out.puts HEADER
     out.puts
     ontology.classes.each do |klass|
-      out.puts %Q[#include "classes/#{klass.c_name}.h"]
+      out.puts %Q[#include "classes/#{klass.c_file}"]
     end
   end
 end
@@ -47,6 +46,7 @@ task :codegen => %w(../know.ttl src/know/classes.h) do |t|
       out.puts
       out.puts "typedef struct know_#{klass.c_name} {"
       klass.properties.each do |property|
+        next if property.c_type.nil?
         out.puts "  #{property.c_type} #{property.c_name};"
       end
       out.puts "} #{klass.c_type};"
@@ -74,7 +74,8 @@ task :codegen => %w(../know.ttl src/know/classes.h) do |t|
           #{klass.c_type}* clone = know_#{klass.c_name}_alloc();
       EOF
       klass.properties.each do |property|
-        if property.functional? && property.c_type != 'void*'
+        next if property.c_type.nil?
+        if property.functional?
           if clone_func = property.c_clone_func
             out.puts <<~EOF.lines.each { |s| s.prepend('  ') }.join
               clone->#{property.c_name} = #{clone_func}(thing->#{property.c_name});
@@ -108,6 +109,7 @@ task :codegen => %w(../know.ttl src/know/classes.h) do |t|
           if (!thing) return;
       EOF
       klass.properties.each do |property|
+        next if property.c_type.nil?
         next unless property.c_type.end_with?('*')
         free_func, clone_func = property.c_free_func || 'free', property.c_clone_func
         if property.functional?
@@ -142,11 +144,10 @@ task :codegen => %w(../know.ttl src/know/classes.h) do |t|
 
       # Generate the `know_$CLASS_$PROPERTY_*()` functions:
       klass.properties.each do |property|
+        next if property.c_type.nil?
         out.puts
         free_func, clone_func = property.c_free_func, property.c_clone_func
         if property.functional?
-          next if property.c_type == 'void*'
-
           out.puts <<~EOF
             inline #{klass.c_type}* know_#{klass.c_name}_#{property.c_name}_clone(const #{klass.c_type}* thing) {
               return NULL; // TODO
@@ -179,7 +180,7 @@ task :codegen => %w(../know.ttl src/know/classes.h) do |t|
       top.puts HEADER
 
       # Generate standard library dependencies:
-      top.puts
+      top.puts unless includes.empty?
       top.puts "#define _POSIX_C_SOURCE 200809L"
       includes.each do |header, comment|
         header = "<#{header}>"
@@ -198,13 +199,17 @@ task :codegen => %w(../know.ttl src/know/classes.h) do |t|
         top.puts "inline #{dependency.c_type}** know_#{pluralize(dependency.c_name)}_clone(const #{dependency.c_type}**);"
       end
 
-      out_file.write(top.string)
-      out_file.write(out.string)
+      out_file.write top.string
+      out_file.write out.string
     end
   end
 end
 
 class Know::Ontology::Class
+  def c_file
+    "#{self.c_name}.h"
+  end
+
   def c_name
     underscore(self.name.to_s)
   end
@@ -241,7 +246,7 @@ class Know::Ontology::Property
       when ::XSD.language then 'char*'
       when ::XSD.nonNegativeInteger then :uint64_t
       when ::XSD.string then 'char*'
-      else 'void*'
+      else return nil
     end
     type << '*' unless self.functional?
     type

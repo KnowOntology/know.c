@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -std=c11 #-Wall -Wextra
+CFLAGS = -std=c11 -Wall -Wextra -Wno-unused-parameter
 INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 
