@@ -1,7 +1,8 @@
 # Know.c: The Know Framework for C
 
 [![License](https://img.shields.io/badge/license-Public%20Domain-blue.svg)](https://unlicense.org)
-[![Compatibility](https://img.shields.io/badge/c11-blue)](https://c11.wiki)
+[![Compatibility](https://img.shields.io/badge/c-11-blue)](https://c11.wiki)
+[![Hosted by Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.com)
 
 🚧 _We are building in public. This is presently under heavy construction._
 
@@ -19,7 +20,10 @@ $ make && sudo make install
 
 ### Installation via Conan
 
-TBD
+```console
+$ conan remote add know https://conan.cloudsmith.io/knowontology/sdk/
+$ conan download know.c -r know
+```
 
 ### Installation via vcpkg
 
